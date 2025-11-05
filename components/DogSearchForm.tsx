@@ -1,27 +1,18 @@
 "use client"
 import {useState} from "react";
-import getDog from "@/lib/getDog";
-import DogCard from "@/components/DogCard";
-import { DogImage } from "@/types";
+import { useRouter } from "next/navigation";
 
 export default function DogSearchForm() {
-    const [dog, setDog] = useState<DogImage | null>(null);
     const [breedName, setBreedName] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        setLoading(true);
-        setError(null);
-        try {
-            const dogData = await getDog(breedName.trim() || undefined);
-            setDog(dogData);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to fetch dog image. Please try again.";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
+        const trimmedBreed = breedName.trim();
+        if (trimmedBreed) {
+            router.push(`/results?breed=${encodeURIComponent(trimmedBreed)}`);
+        } else {
+            router.push("/results");
         }
     };
 
@@ -42,23 +33,15 @@ export default function DogSearchForm() {
                     onChange={(e) => setBreedName(e.target.value)}
                     placeholder="Enter dog breed (e.g. Golden Retriever, Husky)"
                     className="w-full px-4 py-3 mb-4 rounded-lg border-2 border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-                    disabled={loading}
                 />
 
                 <button
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors w-full shadow-lg"
                     type="submit"
-                    disabled={loading}
                 >
-                    {loading ? "Loading..." : breedName.trim() ? "Search Breed" : "Get Random Dog"}
+                    {breedName.trim() ? "Search Breed" : "Get Random Dog"}
                 </button>
-
-                {error && (
-                    <p className="text-red-200 mt-3 text-center bg-red-800 px-4 py-2 rounded border border-red-600">{error}</p>
-                )}
             </form>
-
-            {dog && <DogCard dog={dog} />}
         </div>
     );
 }
